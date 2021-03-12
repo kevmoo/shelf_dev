@@ -1,0 +1,13 @@
+# https://github.com/google/mono_repo.dart
+stages:
+- analyze_format:
+  - group:
+    - dartfmt
+    - dartanalyzer: --fatal-infos .
+    dart: dev
+  - group:
+    - dartanalyzer: .
+    dart: 2.12.0
+
+#- unit_test:
+#  - test
