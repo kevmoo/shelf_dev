@@ -36,16 +36,16 @@ jobs:
       - name: mono_repo self validate
         run: pub global run mono_repo generate --validate
   job_002:
-    name: "analyze_format; Dart dev; PKGS: shelf_dev, test_web_app, test_web_server; `dartfmt -n --set-exit-if-changed .`, `dartanalyzer --fatal-infos .`"
+    name: "analyze_format; Dart dev; PKGS: example/web_app, shelf_dev, test_web_app, test_web_server; `dartfmt -n --set-exit-if-changed .`, `dartanalyzer --fatal-infos .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev-test_web_app-test_web_server;commands:dartfmt-dartanalyzer_0"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-shelf_dev-test_web_app-test_web_server;commands:dartfmt-dartanalyzer_0"
           restore-keys: |
-            os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev-test_web_app-test_web_server
+            os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-shelf_dev-test_web_app-test_web_server
             os:ubuntu-latest;pub-cache-hosted;dart:dev
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -54,6 +54,19 @@ jobs:
           sdk: dev
       - id: checkout
         uses: actions/checkout@v2
+      - id: example_web_app_pub_upgrade
+        name: "example/web_app; pub upgrade --no-precompile"
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: example/web_app
+        run: pub upgrade --no-precompile
+      - name: "example/web_app; dartfmt -n --set-exit-if-changed ."
+        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_app
+        run: dartfmt -n --set-exit-if-changed .
+      - name: "example/web_app; dartanalyzer --fatal-infos ."
+        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_app
+        run: dartanalyzer --fatal-infos .
       - id: shelf_dev_pub_upgrade
         name: "shelf_dev; pub upgrade --no-precompile"
         if: "always() && steps.checkout.conclusion == 'success'"
@@ -94,16 +107,16 @@ jobs:
         working-directory: test_web_server
         run: dartanalyzer --fatal-infos .
   job_003:
-    name: "analyze_format; Dart 2.12.0; PKGS: shelf_dev, test_web_app, test_web_server; `dartanalyzer .`"
+    name: "analyze_format; Dart 2.12.0; PKGS: example/web_app, shelf_dev, test_web_app, test_web_server; `dartanalyzer .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev-test_web_app-test_web_server;commands:dartanalyzer_1"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_app-shelf_dev-test_web_app-test_web_server;commands:dartanalyzer_1"
           restore-keys: |
-            os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev-test_web_app-test_web_server
+            os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_app-shelf_dev-test_web_app-test_web_server
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0
             os:ubuntu-latest;pub-cache-hosted
             os:ubuntu-latest
@@ -112,6 +125,15 @@ jobs:
           sdk: "2.12.0"
       - id: checkout
         uses: actions/checkout@v2
+      - id: example_web_app_pub_upgrade
+        name: "example/web_app; pub upgrade --no-precompile"
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: example/web_app
+        run: pub upgrade --no-precompile
+      - name: example/web_app; dartanalyzer .
+        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_app
+        run: dartanalyzer .
       - id: shelf_dev_pub_upgrade
         name: "shelf_dev; pub upgrade --no-precompile"
         if: "always() && steps.checkout.conclusion == 'success'"
