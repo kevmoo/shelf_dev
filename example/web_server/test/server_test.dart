@@ -15,7 +15,7 @@ void main() {
 
     final json = jsonDecode(responseBody) as Map<String, dynamic>;
 
-    print(json);
+    expect(json, {'a': 2, 'b': 3, 'sum': 5});
   });
 
   test('missing params', () async {
