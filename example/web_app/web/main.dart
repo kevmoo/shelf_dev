@@ -5,7 +5,7 @@ import 'package:http/http.dart';
 Future<void> main() async {
   _writeLog('Dart app running');
 
-  final sumUri = Uri.parse('/api/sum?a=1&b=2');
+  final sumUri = Uri.parse('/api?a=1&b=2');
 
   _writeLog('Requesting $sumUri');
 

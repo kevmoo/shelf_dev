@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 
 final handler = const Pipeline()
+    .addMiddleware(logRequests())
     .addMiddleware(
       (toWrap) => (request) async {
         if (request.method != 'GET') {
           return Response(400, body: 'only GET is accepted!');
         }
 
-        if (request.url.path != 'api') {
+        if (request.url.pathSegments.isNotEmpty) {
           return Response(
             400,
             body: 'No fancy paths, please! (Got "${request.url.path}").',

@@ -10,8 +10,9 @@ part of 'config.dart';
 
 ShelfDevConfig _$ShelfDevConfigFromJson(Map json) {
   return $checkedNew('ShelfDevConfig', json, () {
-    $checkKeys(json, allowedKeys: const ['web-app', 'web-server']);
+    $checkKeys(json, allowedKeys: const ['port', 'web-app', 'web-server']);
     final val = ShelfDevConfig(
+      port: $checkedConvert(json, 'port', (v) => v as int?) ?? 8080,
       webApp: $checkedConvert(
           json, 'web-app', (v) => WebAppConfig.fromJson(v as Map)),
       webServer: $checkedConvert(
@@ -20,6 +21,13 @@ ShelfDevConfig _$ShelfDevConfigFromJson(Map json) {
     return val;
   }, fieldKeyMap: const {'webApp': 'web-app', 'webServer': 'web-server'});
 }
+
+Map<String, dynamic> _$ShelfDevConfigToJson(ShelfDevConfig instance) =>
+    <String, dynamic>{
+      'port': instance.port,
+      'web-app': instance.webApp,
+      'web-server': instance.webServer,
+    };
 
 WebAppConfig _$WebAppConfigFromJson(Map json) {
   return $checkedNew('WebAppConfig', json, () {
@@ -33,6 +41,13 @@ WebAppConfig _$WebAppConfigFromJson(Map json) {
   });
 }
 
+Map<String, dynamic> _$WebAppConfigToJson(WebAppConfig instance) =>
+    <String, dynamic>{
+      'port': instance.port,
+      'path': instance.path,
+      'command': instance.command,
+    };
+
 WebServerConfig _$WebServerConfigFromJson(Map json) {
   return $checkedNew('WebServerConfig', json, () {
     $checkKeys(json, allowedKeys: const ['port', 'path', 'command', 'source']);
@@ -45,3 +60,11 @@ WebServerConfig _$WebServerConfigFromJson(Map json) {
     return val;
   });
 }
+
+Map<String, dynamic> _$WebServerConfigToJson(WebServerConfig instance) =>
+    <String, dynamic>{
+      'port': instance.port,
+      'path': instance.path,
+      'command': instance.command,
+      'source': instance.source,
+    };
