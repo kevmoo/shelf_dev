@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:_test_web_app/handler.dart';
 import 'package:shelf/shelf.dart';
@@ -6,8 +7,11 @@ import 'package:test/test.dart';
 
 void main() {
   test('valid', () async {
-    final result = await handler(
-        Request('GET', Uri.parse('http://localhost/api?a=2&b=3')));
+    final rnd = math.Random();
+    final a = rnd.nextInt(255);
+    final b = rnd.nextInt(255);
+    final result =
+        await handler(Request('GET', Uri.parse('http://localhost/?a=$a&b=$b')));
 
     final responseBody = await result.readAsString();
 
@@ -15,12 +19,12 @@ void main() {
 
     final json = jsonDecode(responseBody) as Map<String, dynamic>;
 
-    expect(json, {'a': 2, 'b': 3, 'sum': 5});
+    expect(json, {'a': a, 'b': b, 'sum': a + b});
   });
 
   test('missing params', () async {
     final result = await handler(
-      Request('GET', Uri.parse('http://localhost/api?a=2')),
+      Request('GET', Uri.parse('http://localhost/?a=2')),
     );
     final responseBody = await result.readAsString();
 
@@ -50,7 +54,7 @@ void main() {
 
   test('invalid params', () async {
     final result = await handler(
-      Request('GET', Uri.parse('http://localhost/api?a=two&b=three')),
+      Request('GET', Uri.parse('http://localhost/?a=two&b=three')),
     );
     final responseBody = await result.readAsString();
 

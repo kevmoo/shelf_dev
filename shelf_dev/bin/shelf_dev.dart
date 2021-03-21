@@ -1,15 +1,7 @@
-import 'dart:io';
-
-import 'package:checked_yaml/checked_yaml.dart';
-import 'package:shelf_dev/src/config.dart';
+import 'package:shelf_dev/src/config_utils.dart';
+import 'package:shelf_dev/src/runner.dart';
 
 Future<void> main(List<String> arguments) async {
-  final config = checkedYamlDecode(
-    File(_defaultFile).readAsStringSync(),
-    (m) => ShelfDevConfig.fromJson(m!),
-    sourceUrl: Uri.parse(_defaultFile),
-  );
-  print(config);
+  final config = configAtRuntime(arguments);
+  await run(config);
 }
-
-const _defaultFile = 'shelf_dev.yaml';

@@ -1,4 +1,10 @@
 # https://github.com/kevmoo/shelf_dev/
+
+# Allow the user to specify the "root" port to listen on
+# Default to 8080
+# TODO: throw if there are conflicts with other things
+# port: 8080
+
 web-app:
   path: web_app
   # TEST: either port is provider OR a placeholder exists in `command`
@@ -16,4 +22,4 @@ web-server:
   # following along at
   # https://firebase.google.com/docs/hosting/full-config#rewrite-cloud-run-container
   # **assuming** this contains anything here and below!
-  source: /api
+  source: api
