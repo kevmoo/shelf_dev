@@ -17,6 +17,7 @@ class ShelfDevConfig {
     required this.webServer,
   }) {
     // TODO: webApp cannot be "underneath" server – or everything will blow up
+    // TODO: webApp and webServer cannot have overlapping listen keys
   }
 
   factory ShelfDevConfig.fromJson(Map json) => _$ShelfDevConfigFromJson(json);
@@ -30,12 +31,19 @@ abstract class BaseWebConfig {
   final int? port;
   final String path;
   final String command;
+  final Set<String> passThroughKeys;
+  final Set<String> restartKeys;
+
+  String get name;
 
   BaseWebConfig({
     required this.path,
     required this.command,
     this.port,
+    this.passThroughKeys = const {},
+    this.restartKeys = const {},
   }) {
+    // TODO: key sets cannot overlap!!
     if (command.trim().isEmpty) {
       throw ArgumentError.value(command, 'command', 'Cannot be empty');
     }
@@ -58,11 +66,19 @@ class WebAppConfig extends BaseWebConfig {
     required String path,
     required String command,
     int? port,
-  }) : super(path: path, command: command, port: port);
+  }) : super(
+          path: path,
+          command: command,
+          port: port,
+          passThroughKeys: {'r', 'R'},
+        );
 
   factory WebAppConfig.fromJson(Map json) => _$WebAppConfigFromJson(json);
 
   Map<String, dynamic> toJson() => _$WebAppConfigToJson(this);
+
+  @override
+  String get name => 'webapp';
 }
 
 @JsonSerializable()
@@ -76,7 +92,12 @@ class WebServerConfig extends BaseWebConfig {
     required this.source,
     int? port,
   })  : sourceSegments = _parsePath(source),
-        super(path: path, command: command, port: port);
+        super(
+          path: path,
+          command: command,
+          port: port,
+          restartKeys: {'s', 'S'},
+        );
 
   factory WebServerConfig.fromJson(Map json) => _$WebServerConfigFromJson(json);
 
@@ -87,4 +108,7 @@ class WebServerConfig extends BaseWebConfig {
     // TODO: much validation
     return uri.pathSegments;
   }
+
+  @override
+  String get name => 'server';
 }
