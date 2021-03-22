@@ -10,34 +10,35 @@ import 'utils.dart';
 
 class ServerWrapper {
   final _messageController = StreamController<WrapperMessage>();
-  final _processTerminatedCompleter = Completer<void>();
+  final _fullyClosedCompleter = Completer<void>();
   final BaseWebConfig _config;
   final Handler handler;
-  final Process _process;
   final void Function() _cancel;
+  final List<String> _commandBits;
+
+  _State _state = _State.notRunning;
+
+  Process? _process;
 
   late final StreamSubscription _keySub;
 
   ServerWrapper._(
     this._config,
     this.handler,
-    this._process,
+    this._commandBits,
     this._cancel,
     Stream<String> keyStream,
   ) {
     _keySub = keyStream.listen((event) {
       if (_config.passThroughKeys.contains(event)) {
-        _message(WrapperMessageType.keyPassThrough, event);
-        _process.stdin.write(event);
-        return;
+        assert(!_config.restartKeys.contains(event));
+        _handlePassThroughKey(event);
       }
       if (_config.restartKeys.contains(event)) {
-        _message(WrapperMessageType.keyRestart, event);
-        return;
+        assert(!_config.passThroughKeys.contains(event));
+        _handleRestartKey(event);
       }
     });
-
-    Timer.run(_exitCodePlus);
   }
 
   static Future<ServerWrapper> create({
@@ -60,51 +61,37 @@ class ServerWrapper {
           .toList(),
     );
 
-    final process = await Process.start(
-      commandBits.first,
-      commandBits.skip(1).toList(),
-      workingDirectory: config.path,
-    );
-
     final serverProxy = proxyHandler(
       'http://localhost:$port',
       client: client,
     );
 
-    return ServerWrapper._(
+    final wrapper = ServerWrapper._(
       config,
       serverProxy,
-      process,
+      commandBits,
       cancel,
       keyStream,
     );
+
+    await wrapper._startProcess();
+
+    return wrapper;
   }
 
   String get name => _config.name;
 
   Stream<WrapperMessage> get messages => _messageController.stream;
 
-  Future<void> close() {
-    _keySub.cancel();
-    _process.kill();
-    return _processTerminatedCompleter.future;
+  Future<void> close() async {
+    if (_state != _State.closed) {
+      await _gotoState(_State.closeRequested);
+    }
+    await _fullyClosedCompleter.future;
   }
 
-  Future<void> _exitCodePlus() async {
-    try {
-      final events = await Future.wait([
-        _lines(_process.stdout),
-        _lines(_process.stderr, error: true),
-        _process.exitCode
-      ]);
-
-      final exitcode = events[2] as int;
-      _message(WrapperMessageType.exit, '$exitcode');
-    } finally {
-      _processTerminatedCompleter.complete();
-      _cancel();
-      await _messageController.close();
-    }
+  Future<void> _startProcess() async {
+    await _gotoState(_State.running);
   }
 
   Future<void> _lines(Stream<List<int>> stdout, {bool error = false}) =>
@@ -117,6 +104,124 @@ class ServerWrapper {
 
   void _message(WrapperMessageType type, String content) =>
       _messageController.add(WrapperMessage._(type, content));
+
+  _State? _transitioningTo;
+
+  void _handlePassThroughKey(String event) {
+    _message(WrapperMessageType.keyPassThrough, event);
+    _process?.stdin.write(event);
+  }
+
+  void _handleRestartKey(String event) {
+    _message(WrapperMessageType.keyRestart, event);
+    _gotoState(_State.restartRequested);
+  }
+
+  Future<void> _gotoState(_State state) async {
+    if (_transitioningTo != null) {
+      throw StateError(
+        'Tried to go to `$state`, but we are already in the middle of a '
+        'transition to `$_transitioningTo`!',
+      );
+    }
+    _debug([name, _state, 'to', state].join(' '));
+    _transitioningTo = state;
+    try {
+      if (!_validTransitions[_state]!.contains(state)) {
+        throw StateError(
+          'Tried to go from `$_state` to `$state` which is not handled (yet)!',
+        );
+      }
+
+      switch (state) {
+        case _State.running:
+          await _doRunningTransition();
+          break;
+        case _State.closeRequested:
+          _process?.kill();
+          break;
+        case _State.processTerminated:
+          await _keySub.cancel();
+          Timer.run(() {
+            // NOTE: now 100% sure this is the best approach, but it should be
+            // workable. Queue up this transition for RIGHT AFTER this state
+            // is transitioned to!
+            _gotoState(_State.closed);
+          });
+          break;
+        case _State.closed:
+          _fullyClosedCompleter.complete();
+          _cancel();
+          await _messageController.close();
+          break;
+        case _State.restartRequested:
+          await _doRestartingTransition();
+          break;
+        case _State.notRunning:
+          throw StateError('Should never transition TO $state!');
+      }
+      _state = state;
+    } finally {
+      _transitioningTo = null;
+    }
+  }
+
+  Future<void> _doRestartingTransition() async {
+    assert(_transitioningTo == _State.restartRequested);
+    _process?.kill();
+  }
+
+  Future<void> _doRunningTransition() async {
+    assert(_transitioningTo == _State.running);
+    if (_process != null) {
+      throw StateError('Process has already started! This is a bug!');
+    }
+
+    final process = await Process.start(
+      _commandBits.first,
+      _commandBits.skip(1).toList(),
+      workingDirectory: _config.path,
+    );
+
+    Timer.run(() async {
+      try {
+        final events = await Future.wait([
+          _lines(process.stdout),
+          _lines(process.stderr, error: true),
+          process.exitCode
+        ]);
+
+        final exitcode = events[2] as int;
+        _message(WrapperMessageType.exit, '$exitcode');
+        _process = null;
+      } finally {
+        switch (_state) {
+          case _State.closeRequested:
+            await _gotoState(_State.closed);
+            break;
+          case _State.restartRequested:
+            await _gotoState(_State.running);
+            break;
+          case _State.running:
+            await _gotoState(_State.processTerminated);
+            break;
+          default:
+            _debug(
+              '$name - process died not sure what to do! - in state $_state '
+              '- transitioning to $_transitioningTo',
+            );
+        }
+      }
+    });
+
+    _process = process;
+    assert(!_fullyClosedCompleter.isCompleted);
+    assert(!_messageController.isClosed);
+  }
+}
+
+void _debug(Object message) {
+  //print(message);
 }
 
 class WrapperMessage {
@@ -136,4 +241,26 @@ enum WrapperMessageType {
   keyPassThrough,
   keyRestart,
   exit,
+}
+
+const _validTransitions = <_State, Set<_State>>{
+  _State.notRunning: {_State.running},
+  _State.running: {
+    _State.closeRequested,
+    _State.restartRequested,
+    _State.processTerminated,
+  },
+  _State.restartRequested: {_State.running},
+  _State.closeRequested: {_State.closed},
+  _State.processTerminated: {_State.closed},
+  _State.closed: {},
+};
+
+enum _State {
+  notRunning,
+  running,
+  restartRequested,
+  closeRequested,
+  processTerminated,
+  closed,
 }
