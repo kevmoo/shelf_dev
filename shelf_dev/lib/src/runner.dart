@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:http/http.dart' show Client;
 import 'package:shelf/shelf.dart';
@@ -14,52 +15,65 @@ Future<void> run(ShelfDevConfig config) async {
   try {
     final userCancelOperation = completeOnTerminate();
 
-    void complete() {
+    void terminateComplete() {
       if (!userCancelOperation.isCompleted) {
         userCancelOperation.complete();
       }
     }
 
     try {
-      final serverWrapper = await ServerWrapper.create(
-        'server',
-        client,
-        config.webServer,
-        complete,
-      );
+      final keyStreamController = StreamController<String>.broadcast();
+
+      stdin.echoMode = false;
+      stdin.lineMode = false;
+      final stdinSub = stdin
+          .transform(systemEncoding.decoder)
+          .listen(keyStreamController.add);
+
       try {
-        final webAppWrapper = await ServerWrapper.create(
-          'webapp',
-          client,
-          config.webApp,
-          complete,
+        final serverWrapper = await ServerWrapper.create(
+          client: client,
+          config: config.webServer,
+          cancel: terminateComplete,
+          keyStream: keyStreamController.stream,
         );
         try {
-          Future<Response> handler(Request request) async {
-            if (_underSegments(
-              request.url.pathSegments,
-              config.webServer.sourceSegments,
-            )) {
-              return serverWrapper
-                  .handler(request.change(path: config.webServer.source));
+          final webAppWrapper = await ServerWrapper.create(
+            client: client,
+            config: config.webApp,
+            cancel: terminateComplete,
+            keyStream: keyStreamController.stream,
+          );
+          try {
+            Future<Response> handler(Request request) async {
+              if (_underSegments(
+                request.url.pathSegments,
+                config.webServer.sourceSegments,
+              )) {
+                return serverWrapper
+                    .handler(request.change(path: config.webServer.source));
+              }
+
+              return webAppWrapper.handler(request);
             }
 
-            return webAppWrapper.handler(request);
+            await runShelfHandler(
+              config.port,
+              handler,
+              userCancelOperation.future,
+            );
+          } finally {
+            webAppWrapper.close();
           }
-
-          await runShelfHandler(
-            config.port,
-            handler,
-            userCancelOperation.future,
-          );
         } finally {
-          webAppWrapper.close();
+          serverWrapper.close();
         }
       } finally {
-        serverWrapper.close();
+        await keyStreamController.close();
+        await stdinSub.cancel();
       }
     } finally {
-      complete();
+      terminateComplete();
     }
   } finally {
     client.close();

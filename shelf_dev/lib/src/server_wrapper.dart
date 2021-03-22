@@ -10,38 +10,59 @@ import 'config.dart';
 import 'utils.dart';
 
 class ServerWrapper {
-  final String name;
+  final BaseWebConfig _config;
   final Handler handler;
   final Process _process;
   final void Function() _cancel;
   final String _prefix;
 
-  ServerWrapper._(this.name, this.handler, this._process, this._cancel)
-      : _prefix = _codeFromName(name).wrap(name)! {
+  late final StreamSubscription _keySub;
+
+  ServerWrapper._(
+    this._config,
+    this.handler,
+    this._process,
+    this._cancel,
+    Stream<String> keyStream,
+  ) : _prefix = _codeFromName(_config.name).wrap(_config.name)! {
+    _keySub = keyStream.listen((event) {
+      if (_config.passThroughKeys.contains(event)) {
+        print('Sending "$event" to $_prefix');
+        _process.stdin.write(event);
+        return;
+      }
+      if (_config.restartKeys.contains(event)) {
+        print('Got "$event" - $_prefix – will restart at some point');
+        return;
+      }
+    });
+
     Timer.run(_exitCodePlus);
   }
 
-  static Future<ServerWrapper> create(
-    String name,
-    Client client,
-    BaseWebConfig config,
-    void Function() cancel,
-  ) async {
+  static Future<ServerWrapper> create({
+    required Client client,
+    required BaseWebConfig config,
+    required void Function() cancel,
+    required Stream<String> keyStream,
+  }) async {
     final port = config.port ?? await getOpenPort();
 
     final command = config.port == null
         ? config.command.replaceAll(BaseWebConfig.portPlaceHolder, '$port')
         : config.command;
 
-    final split = command
-        .split(' ')
-        .map((e) => e.trim())
-        .where((element) => element.isNotEmpty)
-        .toList();
+    final commandBits = List<String>.unmodifiable(
+      command
+          .split(' ')
+          .map((e) => e.trim())
+          .where((element) => element.isNotEmpty)
+          .toList(),
+    );
 
-    final proc = await Process.start(
-      split.first,
-      split.skip(1).toList(),
+    final process = await Process.start(
+      commandBits.first,
+      commandBits.skip(1).toList(),
       workingDirectory: config.path,
     );
 
@@ -50,10 +71,17 @@ class ServerWrapper {
       client: client,
     );
 
-    return ServerWrapper._(name, serverProxy, proc, cancel);
+    return ServerWrapper._(
+      config,
+      serverProxy,
+      process,
+      cancel,
+      keyStream,
+    );
   }
 
   void close() {
+    _keySub.cancel();
     _process.kill();
   }
 
