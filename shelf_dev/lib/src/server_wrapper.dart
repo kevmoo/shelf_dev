@@ -6,6 +6,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_proxy/shelf_proxy.dart';
 
 import 'config.dart';
+import 'utils.dart';
 
 class ServerWrapper {
   final String name;
@@ -30,14 +31,21 @@ class ServerWrapper {
     BaseWebConfig config,
     Future<void> Function() cancel,
   ) async {
+    final port = config.port ?? await getOpenPort();
+
+    final command = config.port == null
+        ? config.command.replaceAll(BaseWebConfig.portPlaceHolder, '$port')
+        : config.command;
+    final split = command.split(' ');
+
     final proc = await Process.start(
-      config.executable,
-      config.arguments,
+      split.first,
+      split.skip(1).toList(),
       workingDirectory: config.path,
     );
 
     final serverProxy = proxyHandler(
-      'http://localhost:${config.port}',
+      'http://localhost:$port',
       client: client,
     );
 

@@ -7,18 +7,15 @@
 
 web-app:
   path: web_app
-  # TEST: either port is provider OR a placeholder exists in `command`
-  port: 8085
   # commands that start with `pub` or `dart` are rewritten to ensure it's the
   # version corresponding to install invoking `shelf-dev`
-  command: pub run build_runner serve web:8085
+  command: pub run build_runner serve web:{PORT}
 
 # May want to support `web-serverS` at some point. But KISS for now.
 web-server:
   # relative path: relative to shelf_dev.yaml file
   path: web_server
-  port: 8090
-  command: dart bin/server.dart
+  command: dart bin/server.dart --port {PORT}
   # following along at
   # https://firebase.google.com/docs/hosting/full-config#rewrite-cloud-run-container
   # **assuming** this contains anything here and below!

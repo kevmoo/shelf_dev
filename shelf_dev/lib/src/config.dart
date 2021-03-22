@@ -25,6 +25,8 @@ class ShelfDevConfig {
 }
 
 abstract class BaseWebConfig {
+  static const portPlaceHolder = '{PORT}';
+
   final int? port;
   final String path;
   final String command;
@@ -37,13 +39,17 @@ abstract class BaseWebConfig {
     if (command.trim().isEmpty) {
       throw ArgumentError.value(command, 'command', 'Cannot be empty');
     }
+    if (port == null) {
+      if (!command.contains(portPlaceHolder)) {
+        throw ArgumentError.value(
+          command,
+          'command',
+          'If `port` is omitted, `command` must include "$portPlaceHolder" '
+              'so n dynamic port can be specified.',
+        );
+      }
+    }
   }
-
-  static List<String> _split(String command) => command.split(' ');
-
-  String get executable => _split(command).first;
-
-  List<String> get arguments => _split(command).skip(1).toList();
 }
 
 @JsonSerializable()
