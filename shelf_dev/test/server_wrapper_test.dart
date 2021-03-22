@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:async/async.dart';
 import 'package:http/http.dart' as http;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_dev/src/config.dart';
@@ -24,23 +25,22 @@ void main() {
       source: 'api',
     );
 
-    final cancelCompleter = Completer<void>();
-
-    void cancelFunction() {
-      cancelCompleter.complete();
-    }
-
     final keyController = StreamController<String>();
 
     final server = await ServerWrapper.create(
       client: client,
       config: serverConfig,
-      cancel: cancelFunction,
+      cancel: expectAsync0(() {}),
       keyStream: keyController.stream,
     );
+    final messageQueue = StreamQueue(server.messages);
 
-    // TODO: should probably have ServerWrapper expose a stream of events
-    await Future.delayed(const Duration(seconds: 1));
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        contentMatcher: startsWith('Serving at localhost:'),
+      ),
+    );
 
     final response = await server.handler(
       Request('GET', Uri.parse('http://ignored/requested/path')),
@@ -48,11 +48,35 @@ void main() {
 
     expect(response.statusCode, 200);
 
-    print(await response.readAsString());
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        contentMatcher: contains('GET     [200] /requested/path'),
+      ),
+    );
 
-    server.close();
+    await server.close();
 
-    // Cancel completer should run!
-    await cancelCompleter.future;
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        contentMatcher: '-15',
+      ),
+    );
+
+    expect(messageQueue, emitsDone);
   });
+}
+
+Matcher _messageMatcher({Object? contentMatcher, Object? typeMatcher}) {
+  var matcher = isA<WrapperMessage>();
+
+  if (contentMatcher != null) {
+    matcher = matcher.having((e) => e.content, 'content', contentMatcher);
+  }
+  if (typeMatcher != null) {
+    matcher = matcher.having((e) => e.type, 'tye', typeMatcher);
+  }
+
+  return matcher;
 }
