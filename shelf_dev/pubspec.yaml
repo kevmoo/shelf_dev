@@ -6,6 +6,7 @@ environment:
   sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
+  async: ^2.5.0
   checked_yaml: ^2.0.1
   http: ^0.13.0
   json_annotation: ^4.0.0

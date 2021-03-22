@@ -33,7 +33,17 @@ abstract class BaseWebConfig {
     required this.path,
     required this.command,
     this.port,
-  });
+  }) {
+    if (command.trim().isEmpty) {
+      throw ArgumentError.value(command, 'command', 'Cannot be empty');
+    }
+  }
+
+  static List<String> _split(String command) => command.split(' ');
+
+  String get executable => _split(command).first;
+
+  List<String> get arguments => _split(command).skip(1).toList();
 }
 
 @JsonSerializable()
