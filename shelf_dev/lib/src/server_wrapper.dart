@@ -32,7 +32,12 @@ class ServerWrapper {
     final command = config.port == null
         ? config.command.replaceAll(BaseWebConfig.portPlaceHolder, '$port')
         : config.command;
-    final split = command.split(' ');
+
+    final split = command
+        .split(' ')
+        .map((e) => e.trim())
+        .where((element) => element.isNotEmpty)
+        .toList();
 
     final proc = await Process.start(
       split.first,
