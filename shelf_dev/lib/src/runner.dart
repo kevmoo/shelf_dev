@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:http/http.dart' show Client;
 import 'package:shelf/shelf.dart';
@@ -10,8 +9,6 @@ import 'server_wrapper.dart';
 import 'shelf_host.dart';
 
 Future<void> run(ShelfDevConfig config) async {
-  print(const JsonEncoder.withIndent(' ').convert(config));
-
   final client = Client();
 
   try {
