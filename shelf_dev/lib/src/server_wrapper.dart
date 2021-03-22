@@ -12,24 +12,17 @@ class ServerWrapper {
   final String name;
   final Handler handler;
   final Process _process;
-  final Future<void> Function() _cancel;
+  final void Function() _cancel;
 
   ServerWrapper._(this.name, this.handler, this._process, this._cancel) {
-    Timer.run(() async {
-      try {
-        final exit = await _exitCodePlus(name, _process);
-        print('$name  exited with code $exit');
-      } finally {
-        await _cancel();
-      }
-    });
+    Timer.run(_exitCodePlus);
   }
 
   static Future<ServerWrapper> create(
     String name,
     Client client,
     BaseWebConfig config,
-    Future<void> Function() cancel,
+    void Function() cancel,
   ) async {
     final port = config.port ?? await getOpenPort();
 
@@ -55,19 +48,24 @@ class ServerWrapper {
   void close() {
     _process.kill();
   }
+
+  Future<void> _exitCodePlus() async {
+    try {
+      final events = await Future.wait([
+        _lines('stdout', _process.stdout),
+        _lines('stderr', _process.stderr),
+        _process.exitCode
+      ]);
+
+      final exitcode = events[2] as int;
+      print('$name  exited with code $exitcode');
+    } finally {
+      _cancel();
+    }
+  }
+
+  Future<void> _lines(String type, Stream<List<int>> stdout) =>
+      stdout.transform(systemEncoding.decoder).forEach((element) {
+        print('$name  $type  $element'.trim());
+      });
 }
-
-Future<int> _exitCodePlus(String name, Process process) async {
-  final events = await Future.wait([
-    _lines(name, 'stdout', process.stdout),
-    _lines(name, 'stderr', process.stderr),
-    process.exitCode
-  ]);
-
-  return events[2] as int;
-}
-
-Future<void> _lines(String name, String type, Stream<List<int>> stdout) =>
-    stdout.transform(systemEncoding.decoder).forEach((element) {
-      print('$name  $type  $element'.trim());
-    });

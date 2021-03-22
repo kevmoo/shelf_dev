@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:async/async.dart';
-
-CancelableCompleter<void> completeOnTerminate() {
+Completer<void> completeOnTerminate() {
   // sigIntSub is copied below to avoid a race condition - ignoring this lint
   // ignore: cancel_subscriptions
   StreamSubscription? sigIntSub, sigTermSub;
@@ -20,10 +18,10 @@ CancelableCompleter<void> completeOnTerminate() {
     }
   }
 
-  final completer = CancelableCompleter<void>(onCancel: cancelSubscriptions);
+  final completer = Completer<void>();
 
   Future<void> signalHandler(ProcessSignal signal) async {
-    print('Received signal $signal - closing');
+    print('\nReceived signal $signal - closing');
     await cancelSubscriptions();
     if (!completer.isCompleted) {
       completer.complete();

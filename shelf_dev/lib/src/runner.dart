@@ -14,19 +14,25 @@ Future<void> run(ShelfDevConfig config) async {
   try {
     final userCancelOperation = completeOnTerminate();
 
+    void complete() {
+      if (!userCancelOperation.isCompleted) {
+        userCancelOperation.complete();
+      }
+    }
+
     try {
       final serverWrapper = await ServerWrapper.create(
         'server',
         client,
         config.webServer,
-        userCancelOperation.operation.cancel,
+        complete,
       );
       try {
         final webAppWrapper = await ServerWrapper.create(
           'webapp',
           client,
           config.webApp,
-          userCancelOperation.operation.cancel,
+          complete,
         );
         try {
           Future<Response> handler(Request request) async {
@@ -44,7 +50,7 @@ Future<void> run(ShelfDevConfig config) async {
           await runShelfHandler(
             config.port,
             handler,
-            userCancelOperation.operation.valueOrCancellation(),
+            userCancelOperation.future,
           );
         } finally {
           webAppWrapper.close();
@@ -53,7 +59,7 @@ Future<void> run(ShelfDevConfig config) async {
         serverWrapper.close();
       }
     } finally {
-      await userCancelOperation.operation.cancel();
+      complete();
     }
   } finally {
     client.close();
