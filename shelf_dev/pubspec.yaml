@@ -8,6 +8,7 @@ environment:
 dependencies:
   checked_yaml: ^2.0.1
   http: ^0.13.0
+  io: ^1.0.0
   json_annotation: ^4.0.0
   path: ^1.7.0
   shelf_proxy: ^1.0.0

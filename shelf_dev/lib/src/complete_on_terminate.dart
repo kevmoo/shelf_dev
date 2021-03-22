@@ -20,9 +20,13 @@ Completer<void> completeOnTerminate() {
 
   final completer = Completer<void>();
 
+  Timer.run(() async {
+    await completer.future;
+    await cancelSubscriptions();
+  });
+
   Future<void> signalHandler(ProcessSignal signal) async {
     print('\nReceived signal $signal - closing');
-    await cancelSubscriptions();
     if (!completer.isCompleted) {
       completer.complete();
     }
