@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
-import 'package:io/ansi.dart' as ansi;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_proxy/shelf_proxy.dart';
 
@@ -10,11 +9,12 @@ import 'config.dart';
 import 'utils.dart';
 
 class ServerWrapper {
+  final _messageController = StreamController<WrapperMessage>();
+  final _processTerminatedCompleter = Completer<void>();
   final BaseWebConfig _config;
   final Handler handler;
   final Process _process;
   final void Function() _cancel;
-  final String _prefix;
 
   late final StreamSubscription _keySub;
 
@@ -24,15 +24,15 @@ class ServerWrapper {
     this._process,
     this._cancel,
     Stream<String> keyStream,
-  ) : _prefix = _codeFromName(_config.name).wrap(_config.name)! {
+  ) {
     _keySub = keyStream.listen((event) {
       if (_config.passThroughKeys.contains(event)) {
-        print('Sending "$event" to $_prefix');
+        _message(WrapperMessageType.keyPassThrough, event);
         _process.stdin.write(event);
         return;
       }
       if (_config.restartKeys.contains(event)) {
-        print('Got "$event" - $_prefix – will restart at some point');
+        _message(WrapperMessageType.keyRestart, event);
         return;
       }
     });
@@ -80,9 +80,14 @@ class ServerWrapper {
     );
   }
 
-  void close() {
+  String get name => _config.name;
+
+  Stream<WrapperMessage> get messages => _messageController.stream;
+
+  Future<void> close() {
     _keySub.cancel();
     _process.kill();
+    return _processTerminatedCompleter.future;
   }
 
   Future<void> _exitCodePlus() async {
@@ -94,27 +99,41 @@ class ServerWrapper {
       ]);
 
       final exitcode = events[2] as int;
-      final exitMessage = ansi.styleBold.wrap('exited with code $exitcode');
-      print('$_prefix     $exitMessage');
+      _message(WrapperMessageType.exit, '$exitcode');
     } finally {
+      _processTerminatedCompleter.complete();
       _cancel();
+      await _messageController.close();
     }
   }
 
   Future<void> _lines(Stream<List<int>> stdout, {bool error = false}) =>
       stdout.transform(systemEncoding.decoder).forEach((element) {
-        final errorBit = error ? ansi.red.wrap('[E]') : '   ';
-        print('$_prefix $errorBit $element'.trim());
+        _message(
+          error ? WrapperMessageType.stderr : WrapperMessageType.stdout,
+          element,
+        );
       });
 
-  static ansi.AnsiCode _codeFromName(String name) {
-    switch (name) {
-      case 'server':
-        return ansi.lightCyan;
-      case 'webapp':
-        return ansi.lightGreen;
-      default:
-        return ansi.resetAll;
-    }
-  }
+  void _message(WrapperMessageType type, String content) =>
+      _messageController.add(WrapperMessage._(type, content));
+}
+
+class WrapperMessage {
+  final WrapperMessageType type;
+  final String content;
+
+  WrapperMessage._(this.type, this.content);
+
+  @override
+  String toString() =>
+      '${type.toString().split('.').last.padRight(15)} ${content.trim()}';
+}
+
+enum WrapperMessageType {
+  stdout,
+  stderr,
+  keyPassThrough,
+  keyRestart,
+  exit,
 }

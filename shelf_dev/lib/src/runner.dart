@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:http/http.dart' show Client;
+import 'package:io/ansi.dart' as ansi;
 import 'package:shelf/shelf.dart';
 
 import 'complete_on_terminate.dart';
@@ -10,6 +11,8 @@ import 'server_wrapper.dart';
 import 'shelf_host.dart';
 
 Future<void> run(ShelfDevConfig config) async {
+  final subscriptionsToClose = <StreamSubscription>[];
+
   final client = Client();
 
   try {
@@ -26,9 +29,10 @@ Future<void> run(ShelfDevConfig config) async {
 
       stdin.echoMode = false;
       stdin.lineMode = false;
-      final stdinSub = stdin
-          .transform(systemEncoding.decoder)
-          .listen(keyStreamController.add);
+
+      subscriptionsToClose.add(
+        stdin.transform(systemEncoding.decoder).listen(keyStreamController.add),
+      );
 
       try {
         final serverWrapper = await ServerWrapper.create(
@@ -37,6 +41,8 @@ Future<void> run(ShelfDevConfig config) async {
           cancel: terminateComplete,
           keyStream: keyStreamController.stream,
         );
+
+        subscriptionsToClose.add(_listenToWrapper(serverWrapper));
         try {
           final webAppWrapper = await ServerWrapper.create(
             client: client,
@@ -44,6 +50,7 @@ Future<void> run(ShelfDevConfig config) async {
             cancel: terminateComplete,
             keyStream: keyStreamController.stream,
           );
+          subscriptionsToClose.add(_listenToWrapper(webAppWrapper));
           try {
             Future<Response> handler(Request request) async {
               if (_underSegments(
@@ -63,20 +70,45 @@ Future<void> run(ShelfDevConfig config) async {
               userCancelOperation.future,
             );
           } finally {
-            webAppWrapper.close();
+            await webAppWrapper.close();
           }
         } finally {
-          serverWrapper.close();
+          await serverWrapper.close();
         }
       } finally {
         await keyStreamController.close();
-        await stdinSub.cancel();
       }
     } finally {
       terminateComplete();
     }
   } finally {
     client.close();
+  }
+
+  for (var sub in subscriptionsToClose) {
+    await sub.cancel();
+  }
+}
+
+StreamSubscription _listenToWrapper(ServerWrapper wrapper) =>
+    wrapper.messages.listen((event) {
+      final nameWithColor = _nameWithColor(wrapper.name);
+
+      print([
+        nameWithColor,
+        event.type.toString().split('.').last.padRight(15),
+        event.content.trim(),
+      ].join(' '));
+    });
+
+String _nameWithColor(String name) {
+  switch (name) {
+    case 'webapp':
+      return ansi.lightCyan.wrap(name)!;
+    case 'server':
+      return ansi.lightGreen.wrap(name)!;
+    default:
+      return name;
   }
 }
 
