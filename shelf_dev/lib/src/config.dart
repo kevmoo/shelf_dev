@@ -53,7 +53,7 @@ abstract class BaseWebConfig {
           command,
           'command',
           'If `port` is omitted, `command` must include "$portPlaceHolder" '
-              'so n dynamic port can be specified.',
+              'so a dynamic port can be specified.',
         );
       }
     }
