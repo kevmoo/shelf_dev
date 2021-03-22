@@ -1,7 +1,7 @@
 # https://github.com/google/mono_repo.dart
-#dart:
-#- 2.12.0
-#- dev
+dart:
+- 2.12.0
+- dev
 
 stages:
 - analyze_format:
@@ -13,5 +13,5 @@ stages:
     - dartanalyzer: .
     dart: 2.12.0
 
-#- unit_test:
-#  - test
+- unit_test:
+  - test
