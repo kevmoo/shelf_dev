@@ -2,3 +2,6 @@
 .dart_tool/
 .packages
 pubspec.lock
+
+# Example files
+example/.firebaserc
