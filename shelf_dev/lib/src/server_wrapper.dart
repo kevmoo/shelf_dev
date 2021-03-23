@@ -12,7 +12,7 @@ class ServerWrapper {
   final _messageController = StreamController<WrapperMessage>();
   final _fullyClosedCompleter = Completer<void>();
   final BaseWebConfig _config;
-  final Handler handler;
+  final Handler _handler;
   final void Function() _cancel;
   final List<String> _commandBits;
 
@@ -24,7 +24,7 @@ class ServerWrapper {
 
   ServerWrapper._(
     this._config,
-    this.handler,
+    this._handler,
     this._commandBits,
     this._cancel,
     Stream<String> keyStream,
@@ -88,6 +88,18 @@ class ServerWrapper {
       await _gotoState(_State.closeRequested);
     }
     await _fullyClosedCompleter.future;
+  }
+
+  Future<Response> handler(Request request) async {
+    assert(_state == _State.running);
+    try {
+      return await _handler(request);
+    } on SocketException catch (e) {
+      await _gotoState(_State.closeRequested);
+      return Response.internalServerError(
+        body: 'Shutting down! Error from $name. $e',
+      );
+    }
   }
 
   Future<void> _startProcess() async {

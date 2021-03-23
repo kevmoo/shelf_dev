@@ -1,19 +1,58 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
 import 'package:shelf_dev/src/config.dart';
 import 'package:shelf_dev/src/server_wrapper.dart';
 import 'package:test/test.dart';
+import 'package:test_descriptor/test_descriptor.dart' as d;
+
+const _testServerFileName = 'test_server.dart';
+
+final _serverSourceCode = File('test/src/test_server.dart').readAsStringSync();
 
 void main() {
   late http.Client client;
   late ServerWrapper server;
   late StreamQueue<WrapperMessage> messageQueue;
   late StreamController<String> keyController;
+  late String workingDir;
 
   setUp(() async {
+    await d.dir('test_server', [
+      d.file('pubspec.yaml', r'''
+name: temp_server
+environment:
+  sdk: ^2.12.0
+dependencies:
+  args: any
+  shelf: any
+'''),
+      d.file(
+        _testServerFileName,
+        _serverSourceCode,
+      )
+    ]).create();
+
+    workingDir = p.join(d.sandbox, 'test_server');
+
+    final result = Process.runSync(
+      'pub',
+      ['get', '--offline'],
+      workingDirectory: workingDir,
+    );
+
+    if (result.exitCode != 0) {
+      fail([
+        result.stderr,
+        result.stderr,
+        result.exitCode,
+      ].join('\n'));
+    }
+
     client = http.Client();
 
     addTearDown(() {
@@ -21,7 +60,7 @@ void main() {
     });
 
     final serverConfig = WebServerConfig(
-      path: 'test/src',
+      path: workingDir,
       command: 'dart test_server.dart --port {PORT}',
       source: 'api',
     );
@@ -45,7 +84,7 @@ void main() {
     );
   });
 
-  test('simple', () async {
+  test('basic setup', () async {
     await _testRequest(server, messageQueue);
 
     await server.close();
@@ -136,10 +175,62 @@ void main() {
     );
     await server.close();
   });
+
+  test('server code edited', () async {
+    await _testRequest(server, messageQueue);
+
+    // Now change the server source to be broken!
+    final newContent = '$_serverSourceCode\ninvalid_dart';
+    File(p.join(workingDir, _testServerFileName)).writeAsStringSync(newContent);
+
+    keyController.add('s');
+
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        typeMatcher: WrapperMessageType.keyRestart,
+        contentMatcher: 's',
+      ),
+    );
+
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        typeMatcher: WrapperMessageType.exit,
+        contentMatcher: '-15',
+      ),
+    );
+
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        typeMatcher: WrapperMessageType.stderr,
+        contentMatcher: startsWith('test_server.dart:'),
+      ),
+    );
+
+    final response = await server.handler(
+      Request('GET', Uri.parse('http://ignored/requested/path/')),
+    );
+
+    expect(response.statusCode, 500);
+
+    expect(
+      await messageQueue.next,
+      _messageMatcher(
+        typeMatcher: WrapperMessageType.exit,
+        contentMatcher: '-15',
+      ),
+    );
+
+    expect(messageQueue, emitsDone);
+  });
 }
 
 Future<void> _testRequest(
-    ServerWrapper server, StreamQueue<WrapperMessage> messageQueue) async {
+  ServerWrapper server,
+  StreamQueue<WrapperMessage> messageQueue,
+) async {
   final response = await server.handler(
     Request('GET', Uri.parse('http://ignored/requested/path/')),
   );
