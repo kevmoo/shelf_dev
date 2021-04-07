@@ -1,4 +1,10 @@
-A simple command-line application.
+[![Dart CI](https://github.com/kevmoo/shelf_dev/actions/workflows/dart.yml/badge.svg?branch=main)](https://github.com/kevmoo/shelf_dev/actions/workflows/dart.yml)
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+A Dart tool for development of a client and server application.
+
+See https://github.com/kevmoo/shelf_dev/blob/main/example/shelf_dev.yaml for
+an example of the configuration file.
+
+TODO: installation
+
+TODO: usage
