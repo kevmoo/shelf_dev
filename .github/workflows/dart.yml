@@ -36,7 +36,7 @@ jobs:
       - name: mono_repo self validate
         run: pub global run mono_repo generate --validate
   job_002:
-    name: "analyze_format; Dart dev; PKGS: example/web_app, example/web_server, shelf_dev; `dartfmt -n --set-exit-if-changed .`, `dartanalyzer --fatal-infos .`"
+    name: "analyze_format; linux; Dart dev; PKGS: example/web_app, example/web_server, shelf_dev; `dartfmt -n --set-exit-if-changed .`, `dartanalyzer --fatal-infos .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -94,7 +94,7 @@ jobs:
         working-directory: shelf_dev
         run: dartanalyzer --fatal-infos .
   job_003:
-    name: "analyze_format; Dart 2.12.0; PKGS: example/web_app, example/web_server, shelf_dev; `dartanalyzer .`"
+    name: "analyze_format; linux; Dart 2.12.0; PKGS: example/web_app, example/web_server, shelf_dev; `dartanalyzer .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -140,7 +140,7 @@ jobs:
         working-directory: shelf_dev
         run: dartanalyzer .
   job_004:
-    name: "unit_test; Dart 2.12.0; PKG: example/web_server; `pub run test`"
+    name: "unit_test; linux; Dart 2.12.0; PKG: example/web_server; `pub run test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -172,7 +172,7 @@ jobs:
       - job_002
       - job_003
   job_005:
-    name: "unit_test; Dart 2.12.0; PKG: shelf_dev; `pub run test`"
+    name: "unit_test; linux; Dart 2.12.0; PKG: shelf_dev; `pub run test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -204,7 +204,7 @@ jobs:
       - job_002
       - job_003
   job_006:
-    name: "unit_test; Dart dev; PKG: example/web_server; `pub run test`"
+    name: "unit_test; linux; Dart dev; PKG: example/web_server; `pub run test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -236,7 +236,7 @@ jobs:
       - job_002
       - job_003
   job_007:
-    name: "unit_test; Dart dev; PKG: shelf_dev; `pub run test`"
+    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `pub run test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
@@ -268,7 +268,51 @@ jobs:
       - job_002
       - job_003
   job_008:
-    name: "unit_test; Dart dev; PKG: shelf_dev; `pub run test --run-skipped -t presubmit-only`"
+    name: "unit_test; windows; Dart 2.12.0; PKG: shelf_dev; `pub run test`"
+    runs-on: windows-latest
+    steps:
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: "2.12.0"
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: shelf_dev_pub_upgrade
+        name: "shelf_dev; pub.bat upgrade --no-precompile"
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub.bat upgrade --no-precompile
+      - name: shelf_dev; pub run test
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub.bat run test
+    needs:
+      - job_001
+      - job_002
+      - job_003
+  job_009:
+    name: "unit_test; windows; Dart dev; PKG: shelf_dev; `pub run test`"
+    runs-on: windows-latest
+    steps:
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: dev
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: shelf_dev_pub_upgrade
+        name: "shelf_dev; pub.bat upgrade --no-precompile"
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub.bat upgrade --no-precompile
+      - name: shelf_dev; pub run test
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub.bat run test
+    needs:
+      - job_001
+      - job_002
+      - job_003
+  job_010:
+    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `pub run test --run-skipped -t presubmit-only`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
