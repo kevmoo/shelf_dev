@@ -15,3 +15,5 @@ stages:
 
 - unit_test:
   - test
+  - test: --run-skipped -t presubmit-only
+    dart: dev
