@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:http/http.dart' show Client;
 import 'package:io/ansi.dart' as ansi;
@@ -14,6 +16,44 @@ Future<void> run(ShelfDevConfig config) async {
   final subscriptionsToClose = <StreamSubscription>[];
 
   final client = Client();
+
+  var lastItems = <String>[];
+  void logLine(List<String> items) {
+    final copy = List.of(items);
+    var allSameSoFar = true;
+    // skipping the last item – we always want to print that!
+    for (var i = 0; i < items.length - 1; i++) {
+      if (lastItems.length > i && lastItems[i] == items[i] && allSameSoFar) {
+        // replace with spaces!
+        copy[i] = ' ' * lastItems[i].length;
+        break;
+      }
+
+      allSameSoFar = false;
+
+      if (i == 0) {
+        // if it's the first one and we have not overwritten it, give it color!
+        copy[i] = _nameWithColor(copy[i]);
+      }
+    }
+    print(copy.join(' '));
+    lastItems = items;
+  }
+
+  void logWrapperMessage(ServerWrapper wrapper, WrapperMessage event) {
+    for (var line in LineSplitter.split(event.content.trim())
+        .map((e) => e.trim())
+        .where((element) => element.isNotEmpty)) {
+      logLine([
+        wrapper.name,
+        event.type.name.padRight(_eventTypeMaxLength),
+        line,
+      ]);
+    }
+  }
+
+  StreamSubscription _listenToWrapper(ServerWrapper wrapper) =>
+      wrapper.messages.listen((event) => logWrapperMessage(wrapper, event));
 
   try {
     final userCancelOperation = completeOnTerminate();
@@ -90,16 +130,10 @@ Future<void> run(ShelfDevConfig config) async {
   }
 }
 
-StreamSubscription _listenToWrapper(ServerWrapper wrapper) =>
-    wrapper.messages.listen((event) {
-      final nameWithColor = _nameWithColor(wrapper.name);
-
-      print([
-        nameWithColor,
-        event.type.toString().split('.').last.padRight(15),
-        event.content.trim(),
-      ].join(' '));
-    });
+final _eventTypeMaxLength = WrapperMessageType.values
+    .map((e) => e.name)
+    .fold<int>(
+        0, (previousValue, element) => math.max(previousValue, element.length));
 
 String _nameWithColor(String name) {
   switch (name) {

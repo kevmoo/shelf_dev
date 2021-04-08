@@ -255,6 +255,10 @@ enum WrapperMessageType {
   exit,
 }
 
+extension WrapperMessageTypeName on WrapperMessageType {
+  String get name => toString().split('.').last;
+}
+
 const _validTransitions = <_State, Set<_State>>{
   _State.notRunning: {_State.running},
   _State.running: {
