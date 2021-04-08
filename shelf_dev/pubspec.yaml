@@ -17,6 +17,7 @@ dependencies:
 dev_dependencies:
   async: ^2.5.0
   build_runner: ^1.0.0
+  build_verify: ^2.0.0
   json_serializable: ^4.0.2
   pedantic: ^1.9.0
   # Needed because we are configuring `combining_builder`

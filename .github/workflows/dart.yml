@@ -147,7 +147,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_server;commands:test"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_server;commands:test_0"
           restore-keys: |
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_server
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0
@@ -179,7 +179,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev;commands:test"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev;commands:test_0"
           restore-keys: |
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0
@@ -211,7 +211,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_server;commands:test"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_server;commands:test_0"
           restore-keys: |
             os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_server
             os:ubuntu-latest;pub-cache-hosted;dart:dev
@@ -243,7 +243,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev;commands:test"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev;commands:test_0"
           restore-keys: |
             os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev
             os:ubuntu-latest;pub-cache-hosted;dart:dev
@@ -263,6 +263,38 @@ jobs:
         if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
         working-directory: shelf_dev
         run: pub run test
+    needs:
+      - job_001
+      - job_002
+      - job_003
+  job_008:
+    name: "unit_test; Dart dev; PKG: shelf_dev; `pub run test --run-skipped -t presubmit-only`"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Pub hosted dependencies
+        uses: actions/cache@v2
+        with:
+          path: "~/.pub-cache/hosted"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev;commands:test_1"
+          restore-keys: |
+            os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev
+            os:ubuntu-latest;pub-cache-hosted;dart:dev
+            os:ubuntu-latest;pub-cache-hosted
+            os:ubuntu-latest
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: dev
+      - id: checkout
+        uses: actions/checkout@v2
+      - id: shelf_dev_pub_upgrade
+        name: "shelf_dev; pub upgrade --no-precompile"
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub upgrade --no-precompile
+      - name: "shelf_dev; pub run test --run-skipped -t presubmit-only"
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: pub run test --run-skipped -t presubmit-only
     needs:
       - job_001
       - job_002
