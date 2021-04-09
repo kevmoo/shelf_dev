@@ -12,10 +12,12 @@ import 'config.dart';
 import 'server_wrapper.dart';
 import 'shelf_host.dart';
 
-Future<void> run(ShelfDevConfig config) async {
-  final subscriptionsToClose = <StreamSubscription>[];
+const forceCrashEnvVar = '_SHELF_DEV_FORCE_CRASH';
 
-  final client = Client();
+Future<void> run(ShelfDevConfig config) async {
+  if (Platform.environment.containsKey(forceCrashEnvVar)) {
+    throw StateError('Test exception to validate error handling!');
+  }
 
   var lastItems = <String>[];
   void logLine(List<String> items) {
@@ -55,6 +57,8 @@ Future<void> run(ShelfDevConfig config) async {
   StreamSubscription _listenToWrapper(ServerWrapper wrapper) =>
       wrapper.messages.listen((event) => logWrapperMessage(wrapper, event));
 
+  final subscriptionsToClose = <StreamSubscription>[];
+  final client = Client();
   try {
     final userCancelOperation = completeOnTerminate();
 
