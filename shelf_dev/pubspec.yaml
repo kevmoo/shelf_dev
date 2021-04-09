@@ -14,6 +14,7 @@ dependencies:
   path: ^1.7.0
   shelf: ^1.0.0
   shelf_proxy: ^1.0.0
+  stack_trace: ^1.10.0
 
 dev_dependencies:
   async: ^2.5.0

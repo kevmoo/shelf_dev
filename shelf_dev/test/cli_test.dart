@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:path/path.dart' as p;
+import 'package:shelf_dev/src/runner.dart';
 import 'package:shelf_dev/src/version.dart';
 import 'package:test/test.dart';
-
-import 'package:test_process/test_process.dart';
 import 'package:test_descriptor/test_descriptor.dart' as d;
-import 'package:path/path.dart' as p;
+import 'package:test_process/test_process.dart';
 
 void main() {
   test('help', () async {
@@ -78,12 +78,50 @@ line 1, column 1 of shelf_dev.yaml: Not a map
       ]),
     );
   });
+
+  test('software crash', () async {
+    await d.file(
+      'shelf_dev.yaml',
+      r'''
+web-app:
+  path: web_app
+  command: pub run build_runner serve web:{PORT}
+
+web-server:
+  path: web_server
+  command: dart bin/server.dart --port {PORT}
+  source: api
+''',
+    ).create();
+
+    final proc = await _start(
+      [],
+      environment: {forceCrashEnvVar: 'true'},
+    );
+
+    await proc.shouldExit(70);
+    await expectLater(
+      proc.stdout,
+      emitsInOrder([
+        'An error occurred!',
+        'Bad state: Test exception to validate error handling!',
+        endsWith('  run'),
+        endsWith('  main'),
+        emitsDone
+      ]),
+    );
+  });
 }
 
-Future<TestProcess> _start(List<String> args) => TestProcess.start(
+Future<TestProcess> _start(
+  List<String> args, {
+  Map<String, String> environment = const {},
+}) =>
+    TestProcess.start(
       'dart',
       [_shelfDevBinary, ...args],
       workingDirectory: d.sandbox,
+      environment: environment,
     );
 
 final _shelfDevBinary = p.join(p.current, 'bin/shelf_dev.dart');
