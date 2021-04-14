@@ -28,7 +28,7 @@ Future<void> run(ShelfDevConfig config) async {
       if (lastItems.length > i && lastItems[i] == items[i] && allSameSoFar) {
         // replace with spaces!
         copy[i] = ' ' * lastItems[i].length;
-        break;
+        continue;
       }
 
       allSameSoFar = false;
