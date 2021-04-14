@@ -1,7 +1,8 @@
 import 'package:build_cli_annotations/build_cli_annotations.dart';
 import 'package:io/io.dart';
-import 'shelf_dev_error.dart';
 
+import 'constants.dart';
+import 'shelf_dev_error.dart';
 import 'version.dart';
 
 part 'cli_options.g.dart';
@@ -44,7 +45,7 @@ class CommandLineOptions {
     }
 
     if (cliOptions.help) {
-      print('Yes, I need to add a LOT more here. Sorry...');
+      print(introduction);
       print(_$parserForCommandLineOptions.usage);
       return null;
     }
@@ -56,4 +57,6 @@ class CommandLineOptions {
 
     return cliOptions;
   }
+
+  static String get usage => _$parserForCommandLineOptions.usage;
 }

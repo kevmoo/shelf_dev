@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:io/ansi.dart';
 
-const appName = 'shelf_dev';
+import 'constants.dart';
 
 /// Returns an open port by creating a temporary Socket
 // Copied with love from

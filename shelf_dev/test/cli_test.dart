@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:io/ansi.dart';
 import 'package:path/path.dart' as p;
+import 'package:shelf_dev/src/cli_options.dart';
+import 'package:shelf_dev/src/constants.dart';
 import 'package:shelf_dev/src/runner.dart';
 import 'package:shelf_dev/src/version.dart';
 import 'package:test/test.dart';
@@ -16,8 +19,8 @@ void main() {
     await expectLater(
       proc.stdout,
       emitsInOrder([
-        'Yes, I need to add a LOT more here. Sorry...',
-        ..._helpOutputLines,
+        ...LineSplitter.split(overrideAnsiOutput(false, () => introduction)),
+        ...LineSplitter.split(CommandLineOptions.usage),
         emitsDone,
       ]),
     );
@@ -39,7 +42,7 @@ void main() {
       emitsInOrder([
         'Unsupported command line argument.',
         'Could not find an option named "bob".',
-        ..._helpOutputLines,
+        ...LineSplitter.split(CommandLineOptions.usage),
         emitsDone
       ]),
     );
@@ -52,13 +55,13 @@ void main() {
     await expectLater(
       proc.stdout,
       emitsInOrder(
-        ['Configuration file "shelf_dev.yaml" not found.', emitsDone],
+        ['Configuration file "$defaultConfigFileName" not found.', emitsDone],
       ),
     );
   });
 
   test('bad config', () async {
-    await d.file('shelf_dev.yaml', 'Not valid yaml!').create();
+    await d.file(defaultConfigFileName, 'Not valid yaml!').create();
 
     final proc = await _start([]);
 
@@ -81,7 +84,7 @@ line 1, column 1 of shelf_dev.yaml: Not a map
 
   test('software crash', () async {
     await d.file(
-      'shelf_dev.yaml',
+      defaultConfigFileName,
       r'''
 web-app:
   path: web_app
@@ -119,15 +122,7 @@ Future<TestProcess> _start(
 }) =>
     TestProcess.start(
       'dart',
-      [_shelfDevBinary, ...args],
+      [p.join(p.current, 'bin/shelf_dev.dart'), ...args],
       workingDirectory: d.sandbox,
       environment: environment,
     );
-
-final _shelfDevBinary = p.join(p.current, 'bin/shelf_dev.dart');
-
-Iterable get _helpOutputLines => LineSplitter.split(_helpOutput);
-
-const _helpOutput = r'''
--?, --help       Print out usage information.
-    --version    Print out the version of the executable.''';

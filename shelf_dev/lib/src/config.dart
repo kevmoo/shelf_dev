@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'constants.dart';
+
 part 'config.g.dart';
 
 @JsonSerializable()
@@ -70,7 +72,7 @@ class WebAppConfig extends BaseWebConfig {
           path: path,
           command: command,
           port: port,
-          passThroughKeys: {'r', 'R'},
+          passThroughKeys: passThroughKeys,
         );
 
   factory WebAppConfig.fromJson(Map json) => _$WebAppConfigFromJson(json);
@@ -96,7 +98,7 @@ class WebServerConfig extends BaseWebConfig {
           path: path,
           command: command,
           port: port,
-          restartKeys: {'s', 'S'},
+          restartKeys: restartKeys,
         );
 
   factory WebServerConfig.fromJson(Map json) => _$WebServerConfigFromJson(json);

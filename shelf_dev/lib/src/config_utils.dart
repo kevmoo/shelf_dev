@@ -5,6 +5,7 @@ import 'package:io/io.dart';
 
 import 'cli_options.dart';
 import 'config.dart';
+import 'constants.dart';
 import 'shelf_dev_error.dart';
 
 // TODO: support specifying config in CLI
@@ -15,11 +16,11 @@ ShelfDevConfig? configAtRuntime([List<String> arguments = const []]) {
     return null;
   }
 
-  final file = File(_defaultFile);
+  final file = File(defaultConfigFileName);
 
   if (!file.existsSync()) {
     throw ShelfDevError(
-      'Configuration file "$_defaultFile" not found.',
+      'Configuration file "$defaultConfigFileName" not found.',
       exitCode: ExitCode.config,
     );
   }
@@ -28,7 +29,7 @@ ShelfDevConfig? configAtRuntime([List<String> arguments = const []]) {
     return checkedYamlDecode(
       file.readAsStringSync(),
       (m) => ShelfDevConfig.fromJson(m!),
-      sourceUrl: Uri.parse(_defaultFile),
+      sourceUrl: Uri.parse(defaultConfigFileName),
     );
   } on ParsedYamlException catch (e, stack) {
     throw ShelfDevError(
@@ -43,5 +44,3 @@ ShelfDevConfig? configAtRuntime([List<String> arguments = const []]) {
     );
   }
 }
-
-const _defaultFile = 'shelf_dev.yaml';
