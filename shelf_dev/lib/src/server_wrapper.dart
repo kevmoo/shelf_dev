@@ -120,12 +120,15 @@ class ServerWrapper {
   _State? _transitioningTo;
 
   void _handlePassThroughKey(String event) {
-    _message(WrapperMessageType.keyPassThrough, event);
+    _message(WrapperMessageType.info, 'Passing key "$event" to process.');
     _process?.stdin.write(event);
   }
 
   void _handleRestartKey(String event) {
-    _message(WrapperMessageType.keyRestart, event);
+    _message(
+      WrapperMessageType.info,
+      'Terminating process and attempting restart.',
+    );
     _gotoState(_State.restartRequested);
   }
 
@@ -250,9 +253,8 @@ class WrapperMessage {
 enum WrapperMessageType {
   stdout,
   stderr,
-  keyPassThrough,
-  keyRestart,
   exit,
+  info,
 }
 
 extension WrapperMessageTypeName on WrapperMessageType {

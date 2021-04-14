@@ -112,8 +112,8 @@ dependencies:
     expect(
       await messageQueue.next,
       _messageMatcher(
-        typeMatcher: WrapperMessageType.keyRestart,
-        contentMatcher: 's',
+        typeMatcher: WrapperMessageType.info,
+        contentMatcher: 'Terminating process and attempting restart.',
       ),
     );
 
@@ -195,8 +195,8 @@ dependencies:
       expect(
         await messageQueue.next,
         _messageMatcher(
-          typeMatcher: WrapperMessageType.keyRestart,
-          contentMatcher: 's',
+          typeMatcher: WrapperMessageType.info,
+          contentMatcher: 'Terminating process and attempting restart.',
         ),
       );
 
