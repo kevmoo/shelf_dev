@@ -1,5 +1,7 @@
 name: shelf_dev
 version: 1.0.0
+description: >-
+  A tool for developing of a client and server application together.
 repository: https://github.com/kevmoo/shelf_dev/
 
 environment:
