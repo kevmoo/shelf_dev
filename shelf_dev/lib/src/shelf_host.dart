@@ -16,7 +16,7 @@ Future<void> runShelfHandler(
     InternetAddress.loopbackIPv4,
     port,
   );
-  appPrint('Listening on ${server.address.host}:${server.port}');
+  appPrint('serving on http://${server.address.host}:${server.port}');
 
   await closeSignal;
   await server.close(force: true);
