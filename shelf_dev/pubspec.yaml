@@ -22,7 +22,7 @@ dependencies:
 dev_dependencies:
   async: ^2.5.0
   build_cli: ^2.1.1
-  build_runner: ^1.0.0
+  build_runner: ^2.0.4
   build_verify: ^2.0.0
   build_version: ^2.0.2
   json_serializable: ^4.0.2

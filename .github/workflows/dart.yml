@@ -1,4 +1,4 @@
-# Created with package:mono_repo v3.4.7
+# Created with package:mono_repo v5.0.0
 name: Dart CI
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:stable"
@@ -30,78 +30,20 @@ jobs:
         with:
           sdk: stable
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - name: mono_repo self validate
-        run: pub global activate mono_repo 3.4.7
+        run: dart pub global activate mono_repo 5.0.0
       - name: mono_repo self validate
-        run: pub global run mono_repo generate --validate
+        run: dart pub global run mono_repo generate --validate
   job_002:
-    name: "analyze_format; linux; Dart dev; PKGS: example/web_app, example/web_server, shelf_dev; `dartfmt -n --set-exit-if-changed .`, `dartanalyzer --fatal-infos .`"
+    name: "analyze_format; linux; Dart 2.12.0; PKGS: example/web_app, example/web_server, shelf_dev; `dart analyze .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-example/web_server-shelf_dev;commands:dartfmt-dartanalyzer_0"
-          restore-keys: |
-            os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-example/web_server-shelf_dev
-            os:ubuntu-latest;pub-cache-hosted;dart:dev
-            os:ubuntu-latest;pub-cache-hosted
-            os:ubuntu-latest
-      - uses: dart-lang/setup-dart@v1.0
-        with:
-          sdk: dev
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: example_web_app_pub_upgrade
-        name: "example/web_app; pub upgrade --no-precompile"
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: example/web_app
-        run: pub upgrade --no-precompile
-      - name: "example/web_app; dartfmt -n --set-exit-if-changed ."
-        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
-        working-directory: example/web_app
-        run: dartfmt -n --set-exit-if-changed .
-      - name: "example/web_app; dartanalyzer --fatal-infos ."
-        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
-        working-directory: example/web_app
-        run: dartanalyzer --fatal-infos .
-      - id: example_web_server_pub_upgrade
-        name: "example/web_server; pub upgrade --no-precompile"
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: example/web_server
-        run: pub upgrade --no-precompile
-      - name: "example/web_server; dartfmt -n --set-exit-if-changed ."
-        if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
-        working-directory: example/web_server
-        run: dartfmt -n --set-exit-if-changed .
-      - name: "example/web_server; dartanalyzer --fatal-infos ."
-        if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
-        working-directory: example/web_server
-        run: dartanalyzer --fatal-infos .
-      - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub upgrade --no-precompile"
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: pub upgrade --no-precompile
-      - name: "shelf_dev; dartfmt -n --set-exit-if-changed ."
-        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: dartfmt -n --set-exit-if-changed .
-      - name: "shelf_dev; dartanalyzer --fatal-infos ."
-        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: dartanalyzer --fatal-infos .
-  job_003:
-    name: "analyze_format; linux; Dart 2.12.0; PKGS: example/web_app, example/web_server, shelf_dev; `dartanalyzer .`"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
-        with:
-          path: "~/.pub-cache/hosted"
-          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_app-example/web_server-shelf_dev;commands:dartanalyzer_1"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_app-example/web_server-shelf_dev;commands:analyze_1"
           restore-keys: |
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_app-example/web_server-shelf_dev
             os:ubuntu-latest;pub-cache-hosted;dart:2.12.0
@@ -111,40 +53,98 @@ jobs:
         with:
           sdk: "2.12.0"
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: example_web_app_pub_upgrade
-        name: "example/web_app; pub upgrade --no-precompile"
+        name: example/web_app; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: example/web_app
-        run: pub upgrade --no-precompile
-      - name: example/web_app; dartanalyzer .
+        run: dart pub upgrade
+      - name: example/web_app; dart analyze .
         if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
         working-directory: example/web_app
-        run: dartanalyzer .
+        run: dart analyze .
       - id: example_web_server_pub_upgrade
-        name: "example/web_server; pub upgrade --no-precompile"
+        name: example/web_server; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: example/web_server
-        run: pub upgrade --no-precompile
-      - name: example/web_server; dartanalyzer .
+        run: dart pub upgrade
+      - name: example/web_server; dart analyze .
         if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
         working-directory: example/web_server
-        run: dartanalyzer .
+        run: dart analyze .
       - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub upgrade --no-precompile"
+        name: shelf_dev; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub upgrade --no-precompile
-      - name: shelf_dev; dartanalyzer .
+        run: dart pub upgrade
+      - name: shelf_dev; dart analyze .
         if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
         working-directory: shelf_dev
-        run: dartanalyzer .
-  job_004:
-    name: "unit_test; linux; Dart 2.12.0; PKG: example/web_server; `pub run test`"
+        run: dart analyze .
+  job_003:
+    name: "analyze_format; linux; Dart dev; PKGS: example/web_app, example/web_server, shelf_dev; `dart format --output=none --set-exit-if-changed .`, `dart analyze --fatal-infos .`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
+        with:
+          path: "~/.pub-cache/hosted"
+          key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-example/web_server-shelf_dev;commands:format-analyze_0"
+          restore-keys: |
+            os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_app-example/web_server-shelf_dev
+            os:ubuntu-latest;pub-cache-hosted;dart:dev
+            os:ubuntu-latest;pub-cache-hosted
+            os:ubuntu-latest
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: dev
+      - id: checkout
+        uses: actions/checkout@v2.3.4
+      - id: example_web_app_pub_upgrade
+        name: example/web_app; dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: example/web_app
+        run: dart pub upgrade
+      - name: "example/web_app; dart format --output=none --set-exit-if-changed ."
+        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_app
+        run: "dart format --output=none --set-exit-if-changed ."
+      - name: "example/web_app; dart analyze --fatal-infos ."
+        if: "always() && steps.example_web_app_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_app
+        run: dart analyze --fatal-infos .
+      - id: example_web_server_pub_upgrade
+        name: example/web_server; dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: example/web_server
+        run: dart pub upgrade
+      - name: "example/web_server; dart format --output=none --set-exit-if-changed ."
+        if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_server
+        run: "dart format --output=none --set-exit-if-changed ."
+      - name: "example/web_server; dart analyze --fatal-infos ."
+        if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
+        working-directory: example/web_server
+        run: dart analyze --fatal-infos .
+      - id: shelf_dev_pub_upgrade
+        name: shelf_dev; dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart pub upgrade
+      - name: "shelf_dev; dart format --output=none --set-exit-if-changed ."
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: "dart format --output=none --set-exit-if-changed ."
+      - name: "shelf_dev; dart analyze --fatal-infos ."
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart analyze --fatal-infos .
+  job_004:
+    name: "unit_test; linux; Dart 2.12.0; PKG: example/web_server; `dart test`"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache Pub hosted dependencies
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:example/web_server;commands:test_0"
@@ -157,26 +157,26 @@ jobs:
         with:
           sdk: "2.12.0"
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: example_web_server_pub_upgrade
-        name: "example/web_server; pub upgrade --no-precompile"
+        name: example/web_server; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: example/web_server
-        run: pub upgrade --no-precompile
-      - name: example/web_server; pub run test
+        run: dart pub upgrade
+      - name: example/web_server; dart test
         if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
         working-directory: example/web_server
-        run: pub run test
+        run: dart test
     needs:
       - job_001
       - job_002
       - job_003
   job_005:
-    name: "unit_test; linux; Dart 2.12.0; PKG: shelf_dev; `pub run test`"
+    name: "unit_test; linux; Dart 2.12.0; PKG: shelf_dev; `dart test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:2.12.0;packages:shelf_dev;commands:test_0"
@@ -189,26 +189,26 @@ jobs:
         with:
           sdk: "2.12.0"
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub upgrade --no-precompile"
+        name: shelf_dev; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub upgrade --no-precompile
-      - name: shelf_dev; pub run test
+        run: dart pub upgrade
+      - name: shelf_dev; dart test
         if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub run test
+        run: dart test
     needs:
       - job_001
       - job_002
       - job_003
   job_006:
-    name: "unit_test; linux; Dart dev; PKG: example/web_server; `pub run test`"
+    name: "unit_test; linux; Dart dev; PKG: example/web_server; `dart test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:example/web_server;commands:test_0"
@@ -221,26 +221,26 @@ jobs:
         with:
           sdk: dev
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: example_web_server_pub_upgrade
-        name: "example/web_server; pub upgrade --no-precompile"
+        name: example/web_server; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: example/web_server
-        run: pub upgrade --no-precompile
-      - name: example/web_server; pub run test
+        run: dart pub upgrade
+      - name: example/web_server; dart test
         if: "always() && steps.example_web_server_pub_upgrade.conclusion == 'success'"
         working-directory: example/web_server
-        run: pub run test
+        run: dart test
     needs:
       - job_001
       - job_002
       - job_003
   job_007:
-    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `pub run test`"
+    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `dart test`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev;commands:test_0"
@@ -253,70 +253,26 @@ jobs:
         with:
           sdk: dev
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub upgrade --no-precompile"
+        name: shelf_dev; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub upgrade --no-precompile
-      - name: shelf_dev; pub run test
+        run: dart pub upgrade
+      - name: shelf_dev; dart test
         if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub run test
+        run: dart test
     needs:
       - job_001
       - job_002
       - job_003
   job_008:
-    name: "unit_test; windows; Dart 2.12.0; PKG: shelf_dev; `pub run test`"
-    runs-on: windows-latest
-    steps:
-      - uses: dart-lang/setup-dart@v1.0
-        with:
-          sdk: "2.12.0"
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub.bat upgrade --no-precompile"
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: pub.bat upgrade --no-precompile
-      - name: shelf_dev; pub run test
-        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: pub.bat run test
-    needs:
-      - job_001
-      - job_002
-      - job_003
-  job_009:
-    name: "unit_test; windows; Dart dev; PKG: shelf_dev; `pub run test`"
-    runs-on: windows-latest
-    steps:
-      - uses: dart-lang/setup-dart@v1.0
-        with:
-          sdk: dev
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub.bat upgrade --no-precompile"
-        if: "always() && steps.checkout.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: pub.bat upgrade --no-precompile
-      - name: shelf_dev; pub run test
-        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
-        working-directory: shelf_dev
-        run: pub.bat run test
-    needs:
-      - job_001
-      - job_002
-      - job_003
-  job_010:
-    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `pub run test --run-skipped -t presubmit-only`"
+    name: "unit_test; linux; Dart dev; PKG: shelf_dev; `dart test --run-skipped -t presubmit-only`"
     runs-on: ubuntu-latest
     steps:
       - name: Cache Pub hosted dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.6
         with:
           path: "~/.pub-cache/hosted"
           key: "os:ubuntu-latest;pub-cache-hosted;dart:dev;packages:shelf_dev;commands:test_1"
@@ -329,16 +285,60 @@ jobs:
         with:
           sdk: dev
       - id: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - id: shelf_dev_pub_upgrade
-        name: "shelf_dev; pub upgrade --no-precompile"
+        name: shelf_dev; dart pub upgrade
         if: "always() && steps.checkout.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub upgrade --no-precompile
-      - name: "shelf_dev; pub run test --run-skipped -t presubmit-only"
+        run: dart pub upgrade
+      - name: "shelf_dev; dart test --run-skipped -t presubmit-only"
         if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
         working-directory: shelf_dev
-        run: pub run test --run-skipped -t presubmit-only
+        run: dart test --run-skipped -t presubmit-only
+    needs:
+      - job_001
+      - job_002
+      - job_003
+  job_009:
+    name: "unit_test; windows; Dart 2.12.0; PKG: shelf_dev; `dart test`"
+    runs-on: windows-latest
+    steps:
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: "2.12.0"
+      - id: checkout
+        uses: actions/checkout@v2.3.4
+      - id: shelf_dev_pub_upgrade
+        name: shelf_dev; dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart pub upgrade
+      - name: shelf_dev; dart test
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart test
+    needs:
+      - job_001
+      - job_002
+      - job_003
+  job_010:
+    name: "unit_test; windows; Dart dev; PKG: shelf_dev; `dart test`"
+    runs-on: windows-latest
+    steps:
+      - uses: dart-lang/setup-dart@v1.0
+        with:
+          sdk: dev
+      - id: checkout
+        uses: actions/checkout@v2.3.4
+      - id: shelf_dev_pub_upgrade
+        name: shelf_dev; dart pub upgrade
+        if: "always() && steps.checkout.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart pub upgrade
+      - name: shelf_dev; dart test
+        if: "always() && steps.shelf_dev_pub_upgrade.conclusion == 'success'"
+        working-directory: shelf_dev
+        run: dart test
     needs:
       - job_001
       - job_002
