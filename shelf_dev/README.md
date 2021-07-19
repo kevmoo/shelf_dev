@@ -8,7 +8,7 @@ an example of the configuration file.
 # Installation
 
 ```console
-[flutter] pub global activate sheld_dev
+[flutter] pub global activate shelf_dev
 ```
 
 # Usage
