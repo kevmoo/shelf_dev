@@ -24,7 +24,7 @@ See ${_bold(appSource)} for information on the configuration format.
 While running, these keys – ${_quoteJoinBold(passThroughKeys)} – will be passed to the "web-app" target.
 When used with `flutter run` this cause a hot restart.
 
-When these keys – ${_quoteJoinBold(restartKeys)} – are pressed, ${_bold(appName)} will 
+When these keys – ${_quoteJoinBold(restartKeys)} – are pressed, ${_bold(appName)} will
 attempt to restart the "web-server" target.
 
 Other options:''';
