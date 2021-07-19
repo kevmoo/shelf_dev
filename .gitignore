@@ -5,3 +5,4 @@ pubspec.lock
 
 # Example files
 example/.firebaserc
+example/web_app/build

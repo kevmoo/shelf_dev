@@ -1,14 +1,16 @@
 {
   "hosting": {
-    "public": "public",
+    "public": "web_app/build",
     "ignore": [
-      "firebase.json",
       "**/.*"
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "web_app/build/something/index.html"
+        "source": "/api",
+        "run": {
+          "serviceId": "api-service-name",
+          "region": "us-central1"
+        }
       }
     ]
   }
