@@ -101,8 +101,7 @@ Future<void> run(ShelfDevConfig config) async {
                 request.url.pathSegments,
                 config.webServer.sourceSegments,
               )) {
-                return serverWrapper
-                    .handler(request.change(path: config.webServer.source));
+                return serverWrapper.handler(request);
               }
 
               return webAppWrapper.handler(request);
