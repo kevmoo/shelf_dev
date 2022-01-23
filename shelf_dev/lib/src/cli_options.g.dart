@@ -8,13 +8,22 @@ part of 'cli_options.dart';
 
 CommandLineOptions _$parseCommandLineOptionsResult(ArgResults result) =>
     CommandLineOptions(
-        help: result['help'] as bool, version: result['version'] as bool);
+      help: result['help'] as bool,
+      version: result['version'] as bool,
+    );
 
 ArgParser _$populateCommandLineOptionsParser(ArgParser parser) => parser
-  ..addFlag('help',
-      abbr: '?', help: 'Print out usage information.', negatable: false)
-  ..addFlag('version',
-      help: 'Print out the version of the executable.', negatable: false);
+  ..addFlag(
+    'help',
+    abbr: '?',
+    help: 'Print out usage information.',
+    negatable: false,
+  )
+  ..addFlag(
+    'version',
+    help: 'Print out the version of the executable.',
+    negatable: false,
+  );
 
 final _$parserForCommandLineOptions =
     _$populateCommandLineOptionsParser(ArgParser());
