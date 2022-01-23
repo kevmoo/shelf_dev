@@ -30,7 +30,7 @@ void main() {
       d.file('pubspec.yaml', r'''
 name: temp_server
 environment:
-  sdk: ^2.12.0
+  sdk: ^2.14.0
 dependencies:
   args: any
   shelf: any
