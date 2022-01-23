@@ -1,5 +1,5 @@
 # https://github.com/google/mono_repo.dart
-dart:
+sdk:
 - 2.12.0
 - dev
 
@@ -8,10 +8,10 @@ stages:
   - group:
     - format
     - analyze: --fatal-infos .
-    dart: dev
+    sdk: dev
   - group:
     - analyze: .
-    dart: 2.12.0
+    sdk: 2.12.0
 
 - unit_test:
   - test:
@@ -19,4 +19,4 @@ stages:
     - linux
     - windows
   - test: --run-skipped -t presubmit-only
-    dart: dev
+    sdk: dev
