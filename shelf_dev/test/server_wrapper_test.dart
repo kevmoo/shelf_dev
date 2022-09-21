@@ -50,11 +50,13 @@ dependencies:
     );
 
     if (result.exitCode != 0) {
-      fail([
-        result.stderr,
-        result.stderr,
-        result.exitCode,
-      ].join('\n'));
+      fail(
+        [
+          result.stderr,
+          result.stderr,
+          result.exitCode,
+        ].join('\n'),
+      );
     }
 
     client = http.Client();
