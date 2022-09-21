@@ -14,8 +14,6 @@ const _testServerFileName = 'test_server.dart';
 
 final _serverSourceCode = File('test/src/test_server.dart').readAsStringSync();
 
-final _pubCommand = Platform.isWindows ? 'pub.bat' : 'pub';
-
 final _terminatedExitCode = Platform.isWindows ? '-1' : '-15';
 
 void main() {
@@ -44,8 +42,8 @@ dependencies:
     workingDir = p.join(d.sandbox, 'test_server');
 
     final result = Process.runSync(
-      _pubCommand,
-      ['get', '--offline'],
+      'dart',
+      ['pub', 'get', '--offline'],
       workingDirectory: workingDir,
     );
 
