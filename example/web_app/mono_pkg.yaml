@@ -11,7 +11,7 @@ stages:
     sdk: dev
   - group:
     - analyze: .
-    sdk: 2.14.0
+    sdk: pubspec
 
 #- unit_test:
 #  - test

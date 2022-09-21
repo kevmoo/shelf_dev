@@ -54,7 +54,7 @@ Future<void> run(ShelfDevConfig config) async {
     }
   }
 
-  StreamSubscription _listenToWrapper(ServerWrapper wrapper) =>
+  StreamSubscription listenToWrapperImpl(ServerWrapper wrapper) =>
       wrapper.messages.listen((event) => logWrapperMessage(wrapper, event));
 
   final subscriptionsToClose = <StreamSubscription>[];
@@ -86,7 +86,7 @@ Future<void> run(ShelfDevConfig config) async {
           keyStream: keyStreamController.stream,
         );
 
-        subscriptionsToClose.add(_listenToWrapper(serverWrapper));
+        subscriptionsToClose.add(listenToWrapperImpl(serverWrapper));
         try {
           final webAppWrapper = await ServerWrapper.create(
             client: client,
@@ -94,7 +94,7 @@ Future<void> run(ShelfDevConfig config) async {
             cancel: terminateComplete,
             keyStream: keyStreamController.stream,
           );
-          subscriptionsToClose.add(_listenToWrapper(webAppWrapper));
+          subscriptionsToClose.add(listenToWrapperImpl(webAppWrapper));
           try {
             Future<Response> handler(Request request) async {
               if (_underSegments(
@@ -133,10 +133,11 @@ Future<void> run(ShelfDevConfig config) async {
   }
 }
 
-final _eventTypeMaxLength = WrapperMessageType.values
-    .map((e) => e.name)
-    .fold<int>(
-        0, (previousValue, element) => math.max(previousValue, element.length));
+final _eventTypeMaxLength =
+    WrapperMessageType.values.map((e) => e.name).fold<int>(
+          0,
+          (previousValue, element) => math.max(previousValue, element.length),
+        );
 
 String _nameWithColor(String name) {
   switch (name) {

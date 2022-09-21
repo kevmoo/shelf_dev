@@ -65,15 +65,10 @@ abstract class BaseWebConfig {
 @JsonSerializable()
 class WebAppConfig extends BaseWebConfig {
   WebAppConfig({
-    required String path,
-    required String command,
-    int? port,
-  }) : super(
-          path: path,
-          command: command,
-          port: port,
-          passThroughKeys: passThroughKeys,
-        );
+    required super.path,
+    required super.command,
+    super.port,
+  }) : super(passThroughKeys: passThroughKeys);
 
   factory WebAppConfig.fromJson(Map json) => _$WebAppConfigFromJson(json);
 
@@ -89,17 +84,12 @@ class WebServerConfig extends BaseWebConfig {
   final List<String> sourceSegments;
 
   WebServerConfig({
-    required String path,
-    required String command,
+    required super.path,
+    required super.command,
     required this.source,
-    int? port,
+    super.port,
   })  : sourceSegments = _parsePath(source),
-        super(
-          path: path,
-          command: command,
-          port: port,
-          restartKeys: restartKeys,
-        );
+        super(restartKeys: restartKeys);
 
   factory WebServerConfig.fromJson(Map json) => _$WebServerConfigFromJson(json);
 

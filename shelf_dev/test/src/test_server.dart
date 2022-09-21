@@ -15,17 +15,19 @@ Future<void> main(List<String> args) async {
   server = await serve(
     const Pipeline()
         .addMiddleware(logRequests())
-        .addMiddleware((innerHandler) => (request) {
-              if (request.url.path == 'terminate') {
-                Timer.run(() {
-                  server.close(force: true);
-                });
+        .addMiddleware(
+          (innerHandler) => (request) {
+            if (request.url.path == 'terminate') {
+              Timer.run(() {
+                server.close(force: true);
+              });
 
-                return Response.ok('shutting down!');
-              }
+              return Response.ok('shutting down!');
+            }
 
-              return innerHandler(request);
-            })
+            return innerHandler(request);
+          },
+        )
         .addHandler(_handler),
     'localhost',
     int.parse(result['port'] as String),

@@ -7,3 +7,8 @@ targets:
           checked: true
           disallow_unrecognized_keys: true
           field_rename: kebab
+
+      source_gen|combining_builder:
+        options:
+          ignore_for_file:
+          - require_trailing_commas
