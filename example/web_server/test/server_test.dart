@@ -10,8 +10,9 @@ void main() {
     final rnd = math.Random();
     final a = rnd.nextInt(255);
     final b = rnd.nextInt(255);
-    final result =
-        await handler(Request('GET', Uri.parse('http://localhost/?a=$a&b=$b')));
+    final result = await handler(
+      Request('GET', Uri.parse('http://localhost/api?a=$a&b=$b')),
+    );
 
     final responseBody = await result.readAsString();
 
@@ -24,7 +25,7 @@ void main() {
 
   test('missing params', () async {
     final result = await handler(
-      Request('GET', Uri.parse('http://localhost/?a=2')),
+      Request('GET', Uri.parse('http://localhost/api?a=2')),
     );
     final responseBody = await result.readAsString();
 
@@ -39,7 +40,7 @@ void main() {
     final responseBody = await result.readAsString();
 
     expect(result.statusCode, 400);
-    expect(responseBody, 'No fancy paths, please! (Got "bob").');
+    expect(responseBody, 'No fancy paths, please! Just `/api` (Got "bob").');
   });
 
   test('wrong verb', () async {
@@ -54,7 +55,7 @@ void main() {
 
   test('invalid params', () async {
     final result = await handler(
-      Request('GET', Uri.parse('http://localhost/?a=two&b=three')),
+      Request('GET', Uri.parse('http://localhost/api?a=two&b=three')),
     );
     final responseBody = await result.readAsString();
 

@@ -9,7 +9,7 @@ web-app:
   path: web_app
   # commands that start with `pub` or `dart` are rewritten to ensure it's the
   # version corresponding to install invoking `shelf-dev`
-  command: pub run build_runner serve web:{PORT}
+  command: dart pub run build_runner serve web:{PORT}
 
 # May want to support `web-serverS` at some point. But KISS for now.
 web-server:
