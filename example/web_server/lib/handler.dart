@@ -5,22 +5,24 @@ import 'package:shelf/shelf.dart';
 final handler = const Pipeline()
     .addMiddleware(logRequests())
     .addMiddleware(
-      (toWrap) => (request) async {
+      (innerHandler) => (request) async {
         if (request.method != 'GET') {
           return Response(400, body: 'only GET is accepted!');
         }
 
-        if (request.url.pathSegments.isNotEmpty) {
+        if (request.url.pathSegments.length != 1 ||
+            request.url.pathSegments[0] != 'api') {
           return Response(
             400,
-            body: 'No fancy paths, please! (Got "${request.url.path}").',
+            body:
+                'No fancy paths, please! Just `/api` (Got "${request.url.path}").',
           );
         }
 
         Response response;
 
         try {
-          response = await toWrap(request);
+          response = await innerHandler(request.change(path: 'api'));
           // ignore: avoid_catching_errors
         } on StateError catch (e) {
           response = Response(400, body: e.message);
